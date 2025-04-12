@@ -4,12 +4,21 @@ vim.cmd 'set number relativenumber'
 
 -- Runpy command that I like to set.
 vim.api.nvim_create_user_command('Runpy', '!python3 %', {})
--- vim.api.nvim_create_user_command('RunC', function ()
---   local filename = vim.fn.expand('%:t:r') --% is the complete path, :t trims just to the filename, :r rids the extension
---   local cmd = string.format('terminal gcc %% -o %s ')
--- end
-vim.api.nvim_create_user_command('RunC', '!gcc % -o %:r && ./%:r', {})
---TODO: make this so that it takes the C version as its argument
+vim.api.nvim_create_user_command('RunC', function(opts)
+  --I hate ternary operators
+  local std_version = (opts.args == '' and '23') or opts.args --default'u 23, verilirse arguman aliyor
+  local compile_cmd = string.format('!gcc-14 %% -std=c%s -o %%:t:r', std_version)
+  local run_cmd = string.format '!./%%:t:r'
+  vim.cmd(compile_cmd)
+  if vim.v.shell_error == 0 then --compile calistiysa
+    vim.cmd(run_cmd)
+  end
+end, {
+  nargs = '?', --0 veya 1 arguman aliyor
+  complete = function() --asagidaki versiyonlari otomatik oneriyor
+    return { '89', '11', '17', '23' }
+  end,
+})
 vim.keymap.set('n', '<leader>rc', ':RunC<CR>', { silent = true })
 vim.keymap.set('n', '<leader>rp', ':Runpy<CR>', { silent = true })
 
